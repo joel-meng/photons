@@ -10,11 +10,10 @@ import XCTest
 
 class FutureMappingTest: XCTestCase {
 
-
     func testFutureMap() throws {
         
-        expect("", { (expectation) in
-            let future = NFuture<Int>()
+        expect("future could map", { (expectation) in
+            let future = Future<Int>()
             let mappedFuture = future.map {
                 String.init($0, radix: 16, uppercase: true)
             }

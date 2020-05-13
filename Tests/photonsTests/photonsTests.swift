@@ -9,7 +9,7 @@ final class photonsTests: XCTestCase {
                 XCTAssertEqual(value, 10)
                 expectation.fulfill()
             }
-            future.resolve(10)
+            future.resolve(with: 10)
         })
     }
     
@@ -27,7 +27,7 @@ final class photonsTests: XCTestCase {
             }
             
             (1...1000).forEach {
-                future.resolve($0)
+                future.resolve(with: $0)
             }
         })
     }
@@ -39,18 +39,16 @@ final class photonsTests: XCTestCase {
             let future = Future<Int>.pure { value in
                 queue.async(flags: .barrier) {
                     count += 1
-                    if value == 10000 {
+                    if count == 10_000 {
                         expectation.fulfill()
                     }
                 }
             }
             
-            (1...10000).forEach { value in
-                DispatchQueue.background.async {
-                    future.resolve(value)
-                }
+            DispatchQueue.concurrentPerform(iterations: 10_000) {
+                future.resolve(with: $0)
             }
-        })
+        }, within: 1)
     }
     
     func testAsyncHeavyLoadedWithDelayFuture() {
@@ -61,17 +59,17 @@ final class photonsTests: XCTestCase {
             let future = Future<Int>.pure { value in
                 queue.async(flags: .barrier) {
                     count += 1
-                    if value == 10000 {
+                    if count == 10_000 {
                         expectation.fulfill()
                     }
                 }
             }
             
-            (1...10000).forEach { value in
-                let timeInterval = UInt8.random(in: 0...10)
+            DispatchQueue.concurrentPerform(iterations: 10_000) { value in
+                let timeInterval = UInt8.random(in: 0...5)
                 let dispatchTimeInterval: DispatchTimeInterval = .seconds(Int(timeInterval))
                 DispatchQueue.background.asyncAfter(deadline: .now() + dispatchTimeInterval) {
-                    future.resolve(value)
+                    future.resolve(with: value)
                 }
             }
         }, within: 10)

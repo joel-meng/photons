@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class NFuture<Value> {
+public class Future<Value> {
     
     private var resolver: ValueResolving<Value>?
     
@@ -29,8 +29,8 @@ public class NFuture<Value> {
         })
     }
     
-    func map<NewValue>(_ f: @escaping (Value) -> NewValue) -> NFuture<NewValue> {
-        let newFuture = NFuture<NewValue>()
+    func map<NewValue>(_ f: @escaping (Value) -> NewValue) -> Future<NewValue> {
+        let newFuture = Future<NewValue>()
         self.setComplete(AsyncTask<Value>(task: { (value) in
             let converted = f(value)
             newFuture.resolver?.resolve(converted)
@@ -39,74 +39,17 @@ public class NFuture<Value> {
     }
 }
 
-public struct Future<Value> {
-    
-    var bind: (AsyncTask<Value>) -> ValueResolving<Value>
-    
-    public init(_ binding: @escaping (AsyncTask<Value>) -> ValueResolving<Value>) {
-        self.bind = binding
-    }
-}
-
-extension Future {
-    
-    func map<NewValue>(_ f: @escaping (Value) -> NewValue) {// -> ValueResolving<Value> {
-//        let newBinder = Future<NewValue> { task -> ValueResolving<NewValue> in
-//            let notifier = Notifier<NewValue>()
-//            notifier.addNotifier(task)
-//
-//            return ValueResolving { value in
-//                notifier.broadcast(newValue: value)
-//            }
-//        }
-//
-//        let asyncTask = AsyncTask<NewValue> { newValue in
-//
-//        }
-//
-//        newBinder.bind(asyncTask)
-//
-    }
-}
-
 extension Future {
     
     static func pure() -> Future<Value> {
-        return Future<Value> { (task) -> ValueResolving<Value> in
-            let notifier = Notifier<Value>()
-            notifier.addNotifier(task)
-            
-            return ValueResolving { value in
-                notifier.broadcast(newValue: value)
-            }
-        }
+        return Future<Value>()
     }
     
-    static func pure(with task: AsyncTask<Value>) -> ValueResolving<Value> {
-        let binding = Future<Value> { (task) -> ValueResolving<Value> in
-            let notifier = Notifier<Value>()
-            notifier.addNotifier(task)
-            
-            return ValueResolving { value in
-                notifier.broadcast(newValue: value)
-            }
-        }
-        
-        return binding.bind(task)
+    static func pure(_ task: @escaping (Value) -> Void) -> Future<Value> {
+        return pure(with: AsyncTask<Value>(task: task))
     }
     
-    static func pure(_ task: @escaping (Value) -> Void) -> ValueResolving<Value> {
-        
-        let binding = Future<Value> { (task) -> ValueResolving<Value> in
-            let notifier = Notifier<Value>()
-            notifier.addNotifier(task)
-            
-            return ValueResolving { value in
-                notifier.broadcast(newValue: value)
-            }
-        }
-        
-        let action = AsyncTask<Value>(task: task)
-        return binding.bind(action)
+    static func pure(with task: AsyncTask<Value>) -> Future<Value> {
+        return Future<Value>(complete: task)
     }
 }
