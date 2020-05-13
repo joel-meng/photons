@@ -9,7 +9,7 @@ import Foundation
 
 public struct AsyncTask<Value> {
     
-    private let task: (Value) -> Void
+    private var task: (Value) -> Void
     
     public init(task: @escaping (Value) -> Void) {
         self.task = { value in

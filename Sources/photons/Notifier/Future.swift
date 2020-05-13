@@ -7,12 +7,65 @@
 
 import Foundation
 
+public class NFuture<Value> {
+    
+    private var resolver: ValueResolving<Value>?
+    
+    public init(complete: AsyncTask<Value>) {
+        setComplete(complete)
+    }
+    
+    public init() {}
+    
+    func resolve(with value: Value) {
+        resolver?.resolve(value)
+    }
+    
+    func setComplete(_ complete: AsyncTask<Value>) {
+        self.resolver = ValueResolving(resolve: {
+            let notifier = Notifier<Value>()
+            notifier.addNotifier(complete)
+            notifier.broadcast(newValue: $0)
+        })
+    }
+    
+    func map<NewValue>(_ f: @escaping (Value) -> NewValue) -> NFuture<NewValue> {
+        let newFuture = NFuture<NewValue>()
+        self.setComplete(AsyncTask<Value>(task: { (value) in
+            let converted = f(value)
+            newFuture.resolver?.resolve(converted)
+        }))
+        return newFuture
+    }
+}
+
 public struct Future<Value> {
     
     var bind: (AsyncTask<Value>) -> ValueResolving<Value>
     
-    public init(_ notify: @escaping (AsyncTask<Value>) -> ValueResolving<Value>) {
-        self.bind = notify
+    public init(_ binding: @escaping (AsyncTask<Value>) -> ValueResolving<Value>) {
+        self.bind = binding
+    }
+}
+
+extension Future {
+    
+    func map<NewValue>(_ f: @escaping (Value) -> NewValue) {// -> ValueResolving<Value> {
+//        let newBinder = Future<NewValue> { task -> ValueResolving<NewValue> in
+//            let notifier = Notifier<NewValue>()
+//            notifier.addNotifier(task)
+//
+//            return ValueResolving { value in
+//                notifier.broadcast(newValue: value)
+//            }
+//        }
+//
+//        let asyncTask = AsyncTask<NewValue> { newValue in
+//
+//        }
+//
+//        newBinder.bind(asyncTask)
+//
     }
 }
 
@@ -55,19 +108,5 @@ extension Future {
         
         let action = AsyncTask<Value>(task: task)
         return binding.bind(action)
-    }
-}
-
-public struct AtomicNotifying<Value> {
-    
-    var notify: (AsyncTask<Value>) -> ValueResolving<Value>
-    
-    public init(_ notify: @escaping (AsyncTask<Value>) -> ValueResolving<Value>) {
-        
-        self.notify = { task in
-            DispatchQueue.barrier.sync(flags: .barrier) {
-                notify(task)
-            }
-        }
     }
 }
