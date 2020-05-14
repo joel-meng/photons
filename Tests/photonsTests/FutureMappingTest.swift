@@ -10,7 +10,7 @@ import XCTest
 
 class FutureMappingTest: XCTestCase {
 
-    func testFutureMap() throws {
+    func testFutureMap() {
         
         expect("future could map", { (expectation) in
             let future = Future<Int>()
@@ -18,12 +18,36 @@ class FutureMappingTest: XCTestCase {
                 String.init($0, radix: 16, uppercase: true)
             }
             
-            mappedFuture.setComplete(AsyncTask<String>(task: { (new) in
+            mappedFuture.setComplete(AsyncTask<String> { (new) in
                 XCTAssertEqual(new, "F")
                 expectation.fulfill()
-            }))
+            })
             
             future.resolve(with: 15)
         })
     }
+    
+    func testFutureFlatMap() {
+         
+         expect("future could flat map", { (expectation) in
+            let future = Future<Int>()
+            let innerFuture = Future<String>()
+            
+            let mappedFuture = future.flatMap { int -> Future<String> in
+                print("--------\(int)------------")
+                return innerFuture
+            }
+             
+            mappedFuture.setComplete(AsyncTask<String> { (new) in
+                XCTAssertEqual(new, "xxx")
+                expectation.fulfill()
+            })
+             
+            future.resolve(with: 15)
+//            Thread.sleep(forTimeInterval: 1)
+            innerFuture.resolve(with: "xxx")
+            
+         }, within: 5)
+     }
+
 }

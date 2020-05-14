@@ -21,21 +21,12 @@ public class Future<Value> {
         resolver?.resolve(value)
     }
     
-    func setComplete(_ complete: AsyncTask<Value>) {
+    func setComplete<T: Task>(_ complete: T) where T.Value == Value {
         self.resolver = ValueResolving(resolve: {
             let notifier = Notifier<Value>()
             notifier.addNotifier(complete)
             notifier.broadcast(newValue: $0)
         })
-    }
-    
-    func map<NewValue>(_ f: @escaping (Value) -> NewValue) -> Future<NewValue> {
-        let newFuture = Future<NewValue>()
-        self.setComplete(AsyncTask<Value>(task: { (value) in
-            let converted = f(value)
-            newFuture.resolver?.resolve(converted)
-        }))
-        return newFuture
     }
 }
 
@@ -46,10 +37,35 @@ extension Future {
     }
     
     static func pure(_ task: @escaping (Value) -> Void) -> Future<Value> {
-        return pure(with: AsyncTask<Value>(task: task))
+        return pure(with: AsyncTask<Value>(task))
     }
     
     static func pure(with task: AsyncTask<Value>) -> Future<Value> {
         return Future<Value>(complete: task)
+    }
+}
+
+extension Future {
+    
+    func map<NewValue>(_ f: @escaping (Value) -> NewValue) -> Future<NewValue> {
+        let newFuture = Future<NewValue>()
+        self.setComplete(ImmediateTask<Value> { (value) in
+            let converted = f(value)
+            newFuture.resolve(with: converted)
+        })
+        return newFuture
+    }
+}
+
+extension Future {
+    
+    func flatMap<NewValue>(_ f: @escaping (Value) -> Future<NewValue>) -> Future<NewValue> {
+        let newFuture: Future<NewValue> = Future<NewValue>()
+        setComplete(ImmediateTask<Value> { (value) in
+            f(value).setComplete(AsyncTask<NewValue> { newValue in
+                newFuture.resolve(with: newValue)
+            })
+        })
+        return newFuture
     }
 }

@@ -1,33 +1,18 @@
 //
-//  AsyncTask.swift
+//  ImmediateTask.swift
 //  photons
 //
-//  Created by Jun Meng on 13/5/20.
+//  Created by Jun Meng on 14/5/20.
 //
 
 import Foundation
 
-public protocol Task {
-    
-    associatedtype Value
-    
-    init(_ task: @escaping (Value) -> Void)
-    
-    func run(_ value: Value)
-    
-    var task: (Value) -> Void { get }
-}
-
-public struct AsyncTask<Value>: Task {
+public struct ImmediateTask<Value>: Task {
     
     public private(set) var task: (Value) -> Void
     
     public init(_ task: @escaping (Value) -> Void) {
-        self.task = { value in
-            DispatchQueue.background.async {
-                task(value)
-            }
-        }
+        self.task = task
     }
     
     // MARK: - Apply

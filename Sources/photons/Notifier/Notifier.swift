@@ -9,11 +9,11 @@ import Foundation
 
 struct Notifier<Value> {
     
-    private var notifiers: Atomic<[AsyncTask<Value>]> = Atomic<[AsyncTask<Value>]>([])
+    private var notifiers: Atomic<[AnyTask<Value>]> = Atomic<[AnyTask<Value>]>([])
     
-    func addNotifier(_ notifier: AsyncTask<Value>) {
+    func addNotifier<T: Task>(_ notifier: T) where T.Value == Value {
         notifiers.value {
-            $0.append(notifier)
+            $0.append(AnyTask<Value>(task: notifier))
         }
     }
     
