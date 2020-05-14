@@ -7,15 +7,19 @@
 
 import Foundation
 
-public struct AtomicTask<Value> {
+public struct AtomicTask<Value>: Task {
     
-    private let task: (Value) -> Void
+    public let task: (Value) -> Void
     
-    init(task: @escaping (Value) -> Void) {
+    public init(_ task: @escaping (Value) -> Void) {
         self.task = { value in
             DispatchQueue.barrier.async(group: nil, qos: .background, flags: .barrier) {
                 task(value)
             }
         }
+    }
+    
+    public func run(_ value: Value) {
+        self.task(value)
     }
 }

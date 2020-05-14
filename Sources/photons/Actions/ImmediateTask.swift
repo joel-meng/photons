@@ -33,6 +33,6 @@ public struct ImmediateTask<Value>: Task {
     // MARK: - Atomical
     
     public func atomic() -> AtomicTask<Value> {
-        return AtomicTask<Value>(task: task)
+        return AtomicTask<Value>(task)
     }
 }
