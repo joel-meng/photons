@@ -6,6 +6,7 @@
 //
 
 import Foundation
+/*
 
 public class Future<Value> {
     
@@ -69,3 +70,4 @@ extension Future {
         return newFuture
     }
 }
+*/
