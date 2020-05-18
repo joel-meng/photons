@@ -78,13 +78,26 @@ public class Future<Value>: FutureType {
             self.listeners.forEach { $0(value) }
         }
     }
+}
 
-    // MARK: - Functional
+// MARK: - Functional
+
+extension Future {
 
     func map<U>(_ f: @escaping (Value) -> U) -> Future<U> {
         let newFuture = Future<U>()
         onComplete { value in
             newFuture.resolve(with: f(value))
+        }
+        return newFuture
+    }
+    
+    func flatMap<U>(_ f: @escaping (Value) -> Future<U>) -> Future<U> {
+        let newFuture = Future<U>()
+        onComplete { value in
+            f(value).onComplete { valueU in
+                newFuture.resolve(with: valueU)
+            }
         }
         return newFuture
     }

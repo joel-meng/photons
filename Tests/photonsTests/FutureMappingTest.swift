@@ -9,45 +9,66 @@ import XCTest
 @testable import photons
 
 class FutureMappingTest: XCTestCase {
-/*
-    func testFutureMap() {
-        
+
+    func testFutureMapWithInitialValue() {
+        let future = Future<Int>(15)
         expect("future could map", { (expectation) in
-            let future = Future<Int>()
             let mappedFuture = future.map {
                 String.init($0, radix: 16, uppercase: true)
             }
             
-            mappedFuture.setComplete(AsyncTask<String> { (new) in
-                XCTAssertEqual(new, "F")
+            mappedFuture.onComplete { (result) in
+                XCTAssertEqual(result, "F")
                 expectation.fulfill()
-            })
+            }
+        })
+    }
+    
+    func testFutureMapWithoutInitialValue() {
+        let future = Future<Int>()
+        expect("future could map", { (expectation) in
+            let mappedFuture = future.map {
+                String.init($0, radix: 16, uppercase: true)
+            }
+            
+            mappedFuture.onComplete { (result) in
+                XCTAssertEqual(result, "F")
+                expectation.fulfill()
+            }
             
             future.resolve(with: 15)
         })
     }
     
+    func testFutureMapWithoutResolvingValue() {
+        let future = Future<Int>()
+        expect("that completion is not getting called.", { (expectation) in
+            // Invert this expecation means expect the `fulfill` not getting called within time limit
+            expectation.isInverted = true
+            
+            let mappedFuture = future.map {
+                String.init($0, radix: 16, uppercase: true)
+            }
+            
+            mappedFuture.onComplete { (result) in
+                expectation.fulfill()
+            }
+        })
+    }
+    
     func testFutureFlatMap() {
-         
-         expect("future could flat map", { (expectation) in
-            let future = Future<Int>()
-            future.resolve(with: 15)
-            
-            let innerFuture = Future<String>()
-            
+        let future = Future<Int>()
+        let innerFuture = Future<String>()
+        expect("future could flat map", { (expectation) in
             let mappedFuture = future.flatMap { int -> Future<String> in
-                print("--------\(int)------------")
+                innerFuture.resolve(with: String(int, radix: 16, uppercase: true))
                 return innerFuture
             }
-             
-            mappedFuture.setComplete(AsyncTask<String> { (new) in
-                XCTAssertEqual(new, "xxx")
+            mappedFuture.onComplete { (new) in
+                XCTAssertEqual(new, "F")
                 expectation.fulfill()
-            })
-             
-            innerFuture.resolve(with: "xxx")
-            
-         }, within: 2)
+            }
+            future.resolve(with: 15)
+        }, within: 2)
      }
-*/
 }
