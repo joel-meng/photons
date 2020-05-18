@@ -24,7 +24,8 @@ public final class Atomic<Value> {
         }
     }
 
-    /// A mutating setter function for value which keeps value updating `Thread-Safe`
+    /// A mutating setter function for value which keeps value updating `Thread-Safe`.
+    /// NOTE: The transform function is a closure that give `value` exclusive access.
     /// - Parameter transform: An closure which used to update the actual value in a atomic transaction.
     public func value<T>(_ transform: (inout Value) throws -> T) rethrows -> T {
         try mutex.sync(flags: .barrier) {

@@ -53,12 +53,3 @@ let mutexContext: ExectutionContext = { task in
         task()
     }
 }
-
-func lockContext<Resource>(resource: inout Resource) -> (@escaping (inout Resource) -> Void) -> Void {
-    return { [resource] task in
-        var resourceCopy = resource
-        mutex.sync(flags: .barrier) {
-            task(&resourceCopy)
-        }
-    }
-}

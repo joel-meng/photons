@@ -9,27 +9,6 @@ import XCTest
 @testable import photons
 
 class ExecutionContextTests: XCTestCase {
-    
-//    func testLockContext() {
-//        var value = 2
-//        
-//        func trans(_ value: inout Int) {
-//            value = 3
-//        }
-//        
-//        expect("", { expectation in
-//            
-//        }, within: 2)
-//    }
-    
-//    func testMutexContext() {
-//        expect("", { expectation in
-//            mutexContext {
-//                XCTAssertFalse(Thread.current.isMainThread)
-//                expectation.fulfill()
-//            }
-//        }, within: 1)
-//    }
 
     func testTaskWithVoidInput() {
         expect("expect task run", { expectation in
@@ -42,28 +21,28 @@ class ExecutionContextTests: XCTestCase {
 
     func testTaskRunOnMain() {
         expect("expect task run on main", { expectation in
-            let task = Func<Int> { value in
-                XCTAssertEqual(value, 1, "value is passed in value")
-                XCTAssertTrue(Thread.current.isMainThread)
-                expectation.fulfill()
-            }
             // Run in a global queue to make sure not task is not accidentially run on main
             DispatchQueue.global().async {
-                task.main().execute(1)
+                // Create a `Func` that running on `Main` thread.
+                Func.main { value in
+                    XCTAssertEqual(value, 1, "value is passed in value")
+                    XCTAssertTrue(Thread.current.isMainThread)
+                    expectation.fulfill()
+                }.execute(1)
             }
         })
     }
     
     func testTaskRunOnBackground() {
         expect("expect task run on background", { expectation in
-            let task = Func<Int> { value in
-                XCTAssertEqual(value, 1, "value is passed in value")
-                XCTAssertFalse(Thread.current.isMainThread)
-                expectation.fulfill()
-            }
             // Run in a global queue to make sure not task is not accidentially run on background queue
             DispatchQueue.main.async {
-                task.background().execute(1)
+                // Create a `Func` that running on background thread.
+                Func.background { value in
+                    XCTAssertEqual(value, 1, "value is passed in value")
+                    XCTAssertFalse(Thread.current.isMainThread)
+                    expectation.fulfill()
+                }.execute(1)
             }
         })
     }
@@ -71,14 +50,14 @@ class ExecutionContextTests: XCTestCase {
     func testTaskRunWithDelay() {
         let secondsOfDelay = 1
         expect("expect task run after a delay of \(secondsOfDelay)", { expectation in
-            let task = Func<TimeInterval> { value in
-                let executingTime = Date.timeIntervalSinceReferenceDate
-                XCTAssertGreaterThan(executingTime - value, TimeInterval(integerLiteral: Int64(secondsOfDelay)))
-                expectation.fulfill()
-            }
             // Run in a global queue to make sure not task is not accidentially run on main
             DispatchQueue.global().async {
-                task.delayed(for: .seconds(secondsOfDelay)).execute(Date.timeIntervalSinceReferenceDate)
+                // Create a `Func` that run with a expected delay thread.
+                Func.delayed(for: .seconds(secondsOfDelay)) { value in
+                    let executingTime = Date.timeIntervalSinceReferenceDate
+                    XCTAssertGreaterThan(executingTime - value, TimeInterval(integerLiteral: Int64(secondsOfDelay)))
+                    expectation.fulfill()
+                }.execute(Date.timeIntervalSinceReferenceDate)
             }
         }, within: 5)
     }
@@ -89,7 +68,7 @@ class ExecutionContextTests: XCTestCase {
             var fulfill1 = false
             var fulfill2 = false
             
-            let task1 = Func<TimeInterval> { value in
+            let task1 = Func<TimeInterval>.atomic { value in
                 (0..<100).forEach {
                     Thread.sleep(forTimeInterval: value)
                     resource.append($0)
@@ -102,7 +81,7 @@ class ExecutionContextTests: XCTestCase {
                 }
             }
             
-            let task2 = Func<TimeInterval> { value in
+            let task2 = Func<TimeInterval>.atomic { value in
                 (100..<200).forEach {
                     Thread.sleep(forTimeInterval: value)
                     resource.append($0)
@@ -117,8 +96,8 @@ class ExecutionContextTests: XCTestCase {
             
             // Run in a global queue to make sure not task is not accidentially run on main
             DispatchQueue.global().async {
-                task1.atomic().execute(0.01)
-                task2.atomic().main().execute(0.02)                
+                task1.execute(0.01)
+                task2.execute(0.02)
             }
         }, within: 20)
     }

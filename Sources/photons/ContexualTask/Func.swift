@@ -21,53 +21,35 @@ public struct Func<Input> {
     
     // MARK: - Wrap In Context
     
-    func atomic() -> Func<Input> {
+    public static func atomic(_ run: @escaping (Input) -> Void) -> Func<Input> {
         return Func<Input> { input in
             mutexContext {
-                self.run(input)
+                run(input)
             }
         }
     }
      
-    func main() -> Func<Input> {
+    public static func main(_ run: @escaping (Input) -> Void) -> Func<Input> {
         Func<Input> { input in
             mainContext {
-                 self.run(input)
+                 run(input)
              }
          }
     }
      
-    func background() -> Func<Input> {
+    public static func background(run: @escaping (Input) -> Void) -> Func<Input> {
         Func<Input> { input in
             backgroundContext {
-                self.run(input)
+                run(input)
             }
         }
     }
     
-    func delayed(for timeInterval: DispatchTimeInterval) -> Func<Input> {
+    public static func delayed(for timeInterval: DispatchTimeInterval, run: @escaping (Input) -> Void) -> Func<Input> {
         Func<Input> { input in
             (delayContext(timeInterval)) {
-                self.run(input)
+                run(input)
             }
         }
     }
-    
-    
-    
-//    func main() -> Context<Input> {
-//        Context(self).main()
-//    }
-//
-//    func background() -> Context<Input> {
-//        Context(self).background()
-//    }
-//
-//    func delayed(for timeInterval: DispatchTimeInterval) -> Context<Input> {
-//        Context(self).delay(timeInterval)
-//    }
-//
-//    func atomic() -> Context<Input> {
-//        Context(self).atomic()
-//    }
 }
