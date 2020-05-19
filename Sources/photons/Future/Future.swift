@@ -37,7 +37,7 @@ public class Future<Value>: FutureType {
     lazy var listeners: [(Value) -> Void] = []
 
     /// Result data that to be notified in future.
-    var result: Value?
+    private(set) var result: Value?
     
     private let mutexQueue = DispatchQueue(label: "Future-Mutex-Queue", attributes: .concurrent)
 
@@ -49,6 +49,12 @@ public class Future<Value>: FutureType {
 
     public init(_ value: Value) {
         result = value
+    }
+    
+    public init(_ resolver: (@escaping (Value) -> Void) -> Void) {
+        resolver { [weak self] value in
+            self?.resolve(with: value)
+        }
     }
     
     // MARK: - Static constructor
