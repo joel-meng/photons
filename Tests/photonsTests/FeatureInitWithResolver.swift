@@ -56,6 +56,59 @@ class FutureInitResolverTests: XCTestCase {
         }
     }
     
+    func testInitWithResolver_ResolveMultipleTimes() {
+        let exp = expectation(description: "Expect last resolved value 20 will trigger completion closure once.")
+        exp.expectedFulfillmentCount = 1
+        // Default thread is main thread
+        XCTAssertTrue(Thread.current.isMainThread)
+        
+        let future = Future<Int> { resolver in
+            // AS resolve immediately when constructing a future, `completion` callback are not called due as which
+            // is not attched to the future. When `completion` attaching to the future, only last value `20` will trigger it.
+            resolver(10)
+            resolver(20)
+        }
+        
+        future.onComplete { value in
+            XCTAssertEqual(value, 20, "Value should equal to resolved value")
+            // Default completion queue is on `mutex` queue
+            XCTAssertFalse(Thread.current.isMainThread)
+            print("exp fulfill with \(value)")
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 2) {
+            if let error = $0 { XCTFail("Expectation not fulfilled. \(error)") }
+        }
+    }
+    
+    func testInitWithResolver_ResolveMultipleTimesWithDelay() {
+        let exp = expectation(description: "Expect last resolved value 20 will trigger completion closure once.")
+        exp.expectedFulfillmentCount = 2
+        // Default thread is main thread
+        XCTAssertTrue(Thread.current.isMainThread)
+        
+        let future = Future<Int> { resolver in
+            // AS resolve immediately when constructing a future, `completion` callback are not called due as which
+            // is not attched to the future. When `completion` attaching to the future, only last value `20` will trigger it.
+            (delayContext(.milliseconds(300))) {
+                resolver(10)
+                resolver(20)
+            }
+        }
+        
+        future.onComplete { value in
+            // Default completion queue is on `mutex` queue
+            XCTAssertFalse(Thread.current.isMainThread)
+            print("exp fulfill with \(value)")
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 2) {
+            if let error = $0 { XCTFail("Expectation not fulfilled. \(error)") }
+        }
+    }
+    
     func testInitWithResolver_ResolveWithNODelay_WithWeakReference() {
         let exp = expectation(description: "Expect resolved value will NOT trigger completion closure")
         exp.isInverted = true
