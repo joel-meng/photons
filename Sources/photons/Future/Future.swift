@@ -29,6 +29,8 @@ public protocol FutureObserver {
     associatedtype Value
 
     func onComplete(_ completeCallback: @escaping (Value) -> Void)
+    
+    func subscribeOn(context: @escaping ExectutionContext)
 }
 
 public class Future<Value>: FutureType {
@@ -38,6 +40,8 @@ public class Future<Value>: FutureType {
 
     /// Result data that to be notified in future.
     private(set) var result: Value?
+    
+    private(set) var subscriptionContext = currentContext
     
     private let mutexQueue = DispatchQueue(label: "Future-Mutex-Queue", attributes: .concurrent)
 
@@ -74,14 +78,31 @@ public class Future<Value>: FutureType {
             self.result.map(completeCallback)
         }
     }
+    
+    public func subscribeOn(context: @escaping ExectutionContext) {
+        mutexQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.subscriptionContext = context
+        }
+    }
 
     // MARK: - Result updating
 
     public func resolve(with value: Value) {
+        // This block is a `barrier` concurrent queue closure, which make sure
+        // 1. Assigning `result` value and
+        // 2. Broadcasting `result` value change are atomic
+        // So that during `result` value would not be updated during broadcasting.
+        // However, it does not gurantee the `completions` are started/completed in any order, but only all added
+        // `completion`s are being notified.
         mutexQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.result = value
-            self.listeners.forEach { $0(value) }
+            self.listeners.forEach { listener in
+                self.subscriptionContext {
+                    listener(value)
+                }
+            }
         }
     }
 }

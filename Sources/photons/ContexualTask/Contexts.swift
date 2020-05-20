@@ -11,7 +11,7 @@ public typealias ExectutionContext = (@escaping () -> Void) -> Void
 
 // MARK: - Current Context
 
-let currentContext: ExectutionContext = { task in
+public let currentContext: ExectutionContext = { task in
     task()
 }
 
