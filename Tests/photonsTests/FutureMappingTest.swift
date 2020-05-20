@@ -58,11 +58,13 @@ class FutureMappingTest: XCTestCase {
     
     func testFutureFlatMap() {
         let future = Future<Int>()
-        let innerFuture = Future<String>()
+        
         expect("future could flat map", { (expectation) in
             let mappedFuture = future.flatMap { int -> Future<String> in
-                innerFuture.resolve(with: String(int, radix: 16, uppercase: true))
-                return innerFuture
+                let innterFuture = Future<String> { resolve in
+                    resolve(String(int, radix: 16, uppercase: true))
+                }
+                return innterFuture
             }
             mappedFuture.onComplete { (new) in
                 XCTAssertEqual(new, "F")

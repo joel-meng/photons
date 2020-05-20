@@ -57,8 +57,8 @@ public class Future<Value>: FutureType {
     }
     
     public init(_ resolver: (@escaping (Value) -> Void) -> Void) {
-        resolver { [weak self] value in
-            self?.resolve(with: value)
+        resolver { value in
+            self.resolve(with: value)
         }
     }
     
@@ -73,8 +73,7 @@ public class Future<Value>: FutureType {
     // MARK: - Listening
     
     public func onComplete(_ completeCallback: @escaping (Value) -> Void) {
-        mutexQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+        mutexQueue.async(flags: .barrier) {
             self.listeners.append(completeCallback)
             if let result  = self.result {
                 self.subscriptionContext {
@@ -102,8 +101,7 @@ public class Future<Value>: FutureType {
         // So that during `result` value would not be updated during broadcasting.
         // However, it does not gurantee the `completions` are started/completed in any order, but only all added
         // `completion`s are being notified.
-        mutexQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+        mutexQueue.async(flags: .barrier) {
             self.result = value
             self.listeners.forEach { listener in
                 self.subscriptionContext {
@@ -117,7 +115,9 @@ public class Future<Value>: FutureType {
 // MARK: - Functional
 
 extension Future {
-
+    
+    // MARK: - Map
+    
     func map<U>(_ f: @escaping (Value) -> U) -> Future<U> {
         let newFuture = Future<U>()
         onComplete { value in
@@ -126,7 +126,13 @@ extension Future {
         return newFuture
     }
     
-    func flatMap<U>(_ f: @escaping (Value) -> Future<U>) -> Future<U> {
+    public static func map<A, B>(future: Future<A>, f: @escaping (A) -> B) -> Future<B> {
+        future.map(f)
+    }
+    
+    // MARK: - FlatMap
+    
+    public func flatMap<U>(_ f: @escaping (Value) -> Future<U>) -> Future<U> {
         let newFuture = Future<U>()
         onComplete { value in
             f(value).onComplete { valueU in
@@ -135,4 +141,37 @@ extension Future {
         }
         return newFuture
     }
+    
+    public static func flatMap<A, B>(future: Future<A>, f: @escaping (A) -> Future<B>) -> Future<B> {
+        future.flatMap(f)
+    }
+    
+    // MARK: - Zip
+    
+    public func zip<A>(with anotherFuture: Future<A>) -> Future<(Value, A)> {
+        flatMap { (thisValue) -> Future<(Value, A)> in
+            anotherFuture.map { anotherValue in
+                (thisValue, anotherValue)
+            }
+        }
+    }
+    
+    public static func flatMap<A, B>(lhf: Future<A>, rhf: Future<B>) -> Future<(A, B)> {
+        lhf.zip(with: rhf)
+    }
+}
+
+precedencegroup infix0 {
+    associativity: left
+    higherThan: AssignmentPrecedence
+}
+
+infix operator >>>: infix0
+func >>> <A, B>(future: Future<A>, f: @escaping (A) -> B) -> Future<B> {
+    future.map(f)
+}
+
+infix operator |||: infix0
+func ||| <A, B>(future: Future<A>, f: @escaping (A) -> Future<B>) -> Future<B> {
+    future.flatMap(f)
 }
