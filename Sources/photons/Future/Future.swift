@@ -30,7 +30,8 @@ public protocol FutureObserver {
 
     func onComplete(_ completeCallback: @escaping (Value) -> Void)
     
-    func subscribeOn(context: @escaping ExectutionContext)
+    @discardableResult
+    func subscribeOn(context: @escaping ExectutionContext) -> Self
 }
 
 public class Future<Value>: FutureType {
@@ -75,19 +76,25 @@ public class Future<Value>: FutureType {
         mutexQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.listeners.append(completeCallback)
-            self.result.map(completeCallback)
+            if let result  = self.result {
+                self.subscriptionContext {
+                    completeCallback(result)
+                }
+            }
         }
     }
     
-    public func subscribeOn(context: @escaping ExectutionContext) {
-        mutexQueue.async(flags: .barrier) { [weak self] in
+    @discardableResult
+    public func subscribeOn(context: @escaping ExectutionContext) -> Self {
+        mutexQueue.sync(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.subscriptionContext = context
         }
+        return self
     }
 
     // MARK: - Result updating
-
+    
     public func resolve(with value: Value) {
         // This block is a `barrier` concurrent queue closure, which make sure
         // 1. Assigning `result` value and
