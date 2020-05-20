@@ -30,8 +30,7 @@ class FutureSubscriptionContextTests: XCTestCase {
         let future = Future<Int>()
         let exp = expectation(description: "future's completion will be invoked on main context")
         // assign subscribe context before resolviing
-        future.subscribeOn(context: mainContext)
-        future.onComplete { value in
+        future.onComplete(subscribeOn: mainContext) { value in
             XCTAssertTrue(Thread.current.isMainThread)
             exp.fulfill()
         }
@@ -45,41 +44,12 @@ class FutureSubscriptionContextTests: XCTestCase {
         let exp = expectation(description: "future's completion will be invoked on main context")
         
         // assign subscribe context before resolviing
-        future.subscribeOn(context: mainContext).onComplete { value in
+        future.onComplete(subscribeOn: mainContext) { value in
             XCTAssertTrue(Thread.current.isMainThread)
             exp.fulfill()
         }
         
         future.resolve(with: 1)
-        waitForExpectations(timeout: 0.3, handler: nil)
-    }
-    
-    func testSubscribeOnMainContextAfterCompletionButBeforeResolvingWillAlsoAffectCompletionQueue() {
-        let future = Future<Int>()
-        let exp = expectation(description: "future's completion will be invoked on main context")
-        
-        future.onComplete { value in
-            XCTAssertTrue(Thread.current.isMainThread)
-            exp.fulfill()
-        }
-        // assign subscribe context before resolviing, but after subscription
-        future.subscribeOn(context: mainContext)
-        
-        future.resolve(with: 1)
-        waitForExpectations(timeout: 0.3, handler: nil)
-    }
-    
-    func testSubscribeOnMainContextAfterResolvingWill_NOT_AffectCompletionQueue() {
-        let future = Future<Int>()
-        let exp = expectation(description: "future's completion will NOT be invoked on main context")
-        
-        future.onComplete { value in
-            XCTAssertFalse(Thread.current.isMainThread)
-            exp.fulfill()
-        }
-        future.resolve(with: 1)
-        future.subscribeOn(context: mainContext)
-
         waitForExpectations(timeout: 0.3, handler: nil)
     }
     
@@ -87,7 +57,7 @@ class FutureSubscriptionContextTests: XCTestCase {
         let future = Future<Int>()
         let exp = expectation(description: "future's completion will be invoked on main context")
         
-        future.subscribeOn(context: backgroundContext).onComplete { value in
+        future.onComplete(subscribeOn: backgroundContext) { value in
             XCTAssertFalse(Thread.current.isMainThread)
             exp.fulfill()
         }
@@ -105,7 +75,7 @@ class FutureSubscriptionContextTests: XCTestCase {
         
         let exp = expectation(description: "future's completion will be invoked on main context")
         
-        future.subscribeOn(context: mainContext).onComplete { value in
+        future.onComplete(subscribeOn: mainContext) { value in
             XCTAssertTrue(Thread.current.isMainThread)
             exp.fulfill()
         }
@@ -118,7 +88,7 @@ class FutureSubscriptionContextTests: XCTestCase {
         
         let exp = expectation(description: "future's completion will be invoked on main context")
         
-        future.subscribeOn(context: mainContext).onComplete { value in
+        future.onComplete(subscribeOn: mainContext) { value in
             XCTAssertTrue(Thread.current.isMainThread)
             exp.fulfill()
         }

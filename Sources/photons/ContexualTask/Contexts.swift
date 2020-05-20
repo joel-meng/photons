@@ -17,7 +17,7 @@ public let currentContext: ExectutionContext = { task in
 
 // MARK: - Main Context
 
-let mainContext: ExectutionContext = { task in
+public let mainContext: ExectutionContext = { task in
     guard Thread.current.isMainThread else {
         DispatchQueue.main.async { task() }
         return
@@ -27,7 +27,7 @@ let mainContext: ExectutionContext = { task in
 
 // MARK: - Delay Context
 
-let delayContext: (DispatchTimeInterval) -> ExectutionContext = { delay in
+public let delayContext: (DispatchTimeInterval) -> ExectutionContext = { delay in
     { task in
         DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + delay) {
             task()
@@ -37,7 +37,7 @@ let delayContext: (DispatchTimeInterval) -> ExectutionContext = { delay in
 
 // MARK: - Background Context
 
-let backgroundContext: ExectutionContext = { task in
+public let backgroundContext: ExectutionContext = { task in
     guard !Thread.current.isMainThread else {
         DispatchQueue.global().async { task() }
         return

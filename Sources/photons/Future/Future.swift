@@ -28,10 +28,8 @@ public protocol FutureObserver {
 
     associatedtype Value
 
-    func onComplete(_ completeCallback: @escaping (Value) -> Void)
-    
-    @discardableResult
-    func subscribeOn(context: @escaping ExectutionContext) -> Self
+    func onComplete(subscribeOn: @escaping ExectutionContext,
+                    completeCallback: @escaping (Value) -> Void)
 }
 
 public class Future<Value>: FutureType {
@@ -56,7 +54,7 @@ public class Future<Value>: FutureType {
         result = value
     }
     
-    public init(_ resolver: (@escaping (Value) -> Void) -> Void) {
+    public init(resolver: (@escaping (Value) -> Void) -> Void) {
         resolver { value in
             self.resolve(with: value)
         }
@@ -64,32 +62,29 @@ public class Future<Value>: FutureType {
     
     // MARK: - Static constructor
     
-    public static func pure(_ onComplete: @escaping (Value) -> Void) -> Future<Value> {
+    public static func pure(subscribeOn subscribeContext: @escaping ExectutionContext = backgroundContext,
+                            onComplete: @escaping (Value) -> Void) -> Future<Value> {
         let future = Future()
-        future.onComplete(onComplete)
+        future.onComplete(subscribeOn: subscribeContext, completeCallback: onComplete)
         return future
     }
     
     // MARK: - Listening
     
-    public func onComplete(_ completeCallback: @escaping (Value) -> Void) {
+    public func onComplete(subscribeOn subscribeContext: @escaping ExectutionContext = backgroundContext,
+                           completeCallback: @escaping (Value) -> Void) {
         mutexQueue.async(flags: .barrier) {
-            self.listeners.append(completeCallback)
-            if let result  = self.result {
-                self.subscriptionContext {
+            let wrapper: (Value) -> Void = { result in
+                subscribeContext {
                     completeCallback(result)
                 }
             }
+            
+            self.listeners.append(wrapper)
+            if let result  = self.result {
+                wrapper(result)
+            }
         }
-    }
-    
-    @discardableResult
-    public func subscribeOn(context: @escaping ExectutionContext) -> Self {
-        mutexQueue.sync(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            self.subscriptionContext = context
-        }
-        return self
     }
 
     // MARK: - Result updating
@@ -104,9 +99,7 @@ public class Future<Value>: FutureType {
         mutexQueue.async(flags: .barrier) {
             self.result = value
             self.listeners.forEach { listener in
-                self.subscriptionContext {
-                    listener(value)
-                }
+                listener(value)
             }
         }
     }
@@ -118,24 +111,24 @@ extension Future {
     
     // MARK: - Map
     
-    func map<U>(_ f: @escaping (Value) -> U) -> Future<U> {
+    func map<U>(f: @escaping (Value) -> U) -> Future<U> {
         let newFuture = Future<U>()
-        onComplete { value in
+        onComplete(subscribeOn: currentContext) { value in
             newFuture.resolve(with: f(value))
         }
         return newFuture
     }
     
     public static func map<A, B>(future: Future<A>, f: @escaping (A) -> B) -> Future<B> {
-        future.map(f)
+        future.map(f: f)
     }
     
     // MARK: - FlatMap
     
-    public func flatMap<U>(_ f: @escaping (Value) -> Future<U>) -> Future<U> {
+    public func flatMap<U>(f: @escaping (Value) -> Future<U>) -> Future<U> {
         let newFuture = Future<U>()
-        onComplete { value in
-            f(value).onComplete { valueU in
+        onComplete(subscribeOn: currentContext) { value in
+            f(value).onComplete(subscribeOn: currentContext) { valueU in
                 newFuture.resolve(with: valueU)
             }
         }
@@ -143,12 +136,13 @@ extension Future {
     }
     
     public static func flatMap<A, B>(future: Future<A>, f: @escaping (A) -> Future<B>) -> Future<B> {
-        future.flatMap(f)
+        future.flatMap(f: f)
     }
     
     // MARK: - Zip
     
-    public func zip<A>(with anotherFuture: Future<A>) -> Future<(Value, A)> {
+    public func zip<A>(subscribeOn subscribeContext: @escaping ExectutionContext = backgroundContext,
+                       with anotherFuture: Future<A>) -> Future<(Value, A)> {
         flatMap { (thisValue) -> Future<(Value, A)> in
             anotherFuture.map { anotherValue in
                 (thisValue, anotherValue)
@@ -168,10 +162,10 @@ precedencegroup infix0 {
 
 infix operator >>>: infix0
 func >>> <A, B>(future: Future<A>, f: @escaping (A) -> B) -> Future<B> {
-    future.map(f)
+    future.map(f: f)
 }
 
 infix operator |||: infix0
 func ||| <A, B>(future: Future<A>, f: @escaping (A) -> Future<B>) -> Future<B> {
-    future.flatMap(f)
+    future.flatMap(f: f)
 }

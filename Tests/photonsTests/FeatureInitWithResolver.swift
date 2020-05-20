@@ -109,7 +109,7 @@ class FutureInitResolverTests: XCTestCase {
         }
     }
     
-    func testInitWithResolver_ResolveWithNODelay_WithWeakReference() {
+    func testInitWithResolver_ResolveWithNODelay_nilReferenceBeforeSubscribing() {
         let exp = expectation(description: "Expect resolved value will NOT trigger completion closure")
         exp.isInverted = true
         // Default thread is main thread
@@ -120,19 +120,18 @@ class FutureInitResolverTests: XCTestCase {
             resolver(10)
         }
         
+        future = nil
         future?.onComplete { value in
             // Will not trigger this as future is deinited when `future = nil`
             exp.fulfill()
         }
-        
-        future = nil
         
         waitForExpectations(timeout: 1) {
             if let error = $0 { XCTFail("Expectation not fulfilled. \(error)") }
         }
     }
     
-    func testInitWithResolver_ResolveWithDelay_WithWeakReference() {
+    func testInitWithResolver_ResolveWithDelay_nilReferenceBeforeSubscribing() {
         let exp = expectation(description: "Expect resolved value will NOT trigger completion closure")
         exp.isInverted = true
         // Default thread is main thread
@@ -146,13 +145,11 @@ class FutureInitResolverTests: XCTestCase {
                 resolver(10)                
             }
         }
-        
+        future = nil
         future?.onComplete { value in
             // Will not trigger this as future is deinited when `future = nil`
             exp.fulfill()
         }
-        
-        future = nil
         
         waitForExpectations(timeout: 1) {
             if let error = $0 { XCTFail("Expectation not fulfilled. \(error)") }

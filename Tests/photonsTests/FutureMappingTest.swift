@@ -13,8 +13,8 @@ class FutureMappingTest: XCTestCase {
     func testFutureMapWithInitialValue() {
         let future = Future<Int>(15)
         expect("future could map", { (expectation) in
-            let mappedFuture = future.map {
-                String.init($0, radix: 16, uppercase: true)
+            let mappedFuture = future.map { value -> String in
+                return String(value, radix: 16, uppercase: true)
             }
             
             mappedFuture.onComplete { (result) in
