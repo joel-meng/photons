@@ -42,48 +42,4 @@ class FutureOperatorTests: XCTestCase {
         
         waitForExpectations(timeout: 0.3, handler: nil)
     }
-    
-    // MARK: - Flat Map operator
-    
-    func testFlatMapOperator() {
-        let exp = expectation(description: "Expect same value passed on to next future")
-        let future1 = Future(1)
-        (future1 ||| { (value: Int) -> Future<Int> in
-            return Future<Int>(value * 2)
-        }).onComplete { value in
-            XCTAssertEqual(value, 2)
-            exp.fulfill()
-        }
-        waitForExpectations(timeout: 0.3, handler: nil)
-    }
-
-    func testFlatMapOperatorWithDelay() {
-        let exp = expectation(description: "Expect same value passed on to next future")
-        let future1 = Future(1)
-        (future1 ||| { (value: Int) -> Future<Int> in
-            let future = Future<Int>()
-            (delayContext(.milliseconds(100))) {
-                future.resolve(with: value * 2)
-            }
-            return future
-        }).onComplete { value in
-            XCTAssertEqual(value, 2)
-            exp.fulfill()
-        }
-        waitForExpectations(timeout: 0.3, handler: nil)
-    }
-    
-    func testFlatMapOperatorToDifferentType() {
-        let toHexStringFuture: (Int) -> Future<String> = { inValue in
-            Future<String> { resolve in
-                resolve(String(inValue, radix: 16, uppercase: true))
-            }
-        }
-        (Future(15) ||| toHexStringFuture).onComplete { value in
-            XCTAssertEqual(value, "F")
-        }
-    }
-    
-    // MARK: - Zip
-
-    }
+}

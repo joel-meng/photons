@@ -8,7 +8,7 @@
 import XCTest
 @testable import photons
 
-class FutureZipTests: XCTestCase {
+class FutureZipOperatorTests: XCTestCase {
     
     func testZipOperator_FutureResolvedImmediately() {
         let exp = expectation(description: "2 futures are being resolved")
