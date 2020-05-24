@@ -13,7 +13,7 @@ class FutureZipOperatorTests: XCTestCase {
     func testZipOperator_FutureResolvedImmediately() {
         let exp = expectation(description: "2 futures are being resolved")
         // Immediate future init
-        (Future(1) +++ Future(2)).onComplete { value in
+        (Future(1) +++ Future(2)).subscribe { value in
             let (lhv, rhv) = value
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
             XCTAssertEqual(lhv, 1)
@@ -35,7 +35,7 @@ class FutureZipOperatorTests: XCTestCase {
             resolve(2)
         }
         
-        (future1 +++ future2).onComplete { value in
+        (future1 +++ future2).subscribe { value in
             let (lhv, rhv) = value
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
             XCTAssertEqual(lhv, 1)
@@ -60,7 +60,7 @@ class FutureZipOperatorTests: XCTestCase {
             }
         }
         
-        (future1 +++ future2).onComplete { value in
+        (future1 +++ future2).subscribe { value in
             let (lhv, rhv) = value
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
             XCTAssertEqual(lhv, 1)
@@ -76,7 +76,7 @@ class FutureZipOperatorTests: XCTestCase {
         let future2 = Future<Int>()
         let exp = expectation(description: "2 futures are being resolved")
         
-        (future1 +++ future2).onComplete { (value1, value2) in
+        (future1 +++ future2).subscribe { (value1, value2) in
             XCTAssertEqual(value1, 1, "Value1 should equal to 1")
             XCTAssertEqual(value2, 2, "Value2 should equal to 2")
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
@@ -100,7 +100,7 @@ class FutureZipOperatorTests: XCTestCase {
         let exp = expectation(description: "2 futures are being resolved")
         
         // Immediate resolving on the right side of `+++`
-        (future1 +++ Future(2)).onComplete { (value1, value2) in
+        (future1 +++ Future(2)).subscribe { (value1, value2) in
             XCTAssertEqual(value1, 1, "Value1 should equal to 1")
             XCTAssertEqual(value2, 2, "Value2 should equal to 2")
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
@@ -119,7 +119,7 @@ class FutureZipOperatorTests: XCTestCase {
         let exp = expectation(description: "2 futures are being resolved")
         
         // Immediate resolving on the left side of `+++`
-        (Future(1) +++ future).onComplete { (value1, value2) in
+        (Future(1) +++ future).subscribe { (value1, value2) in
             XCTAssertEqual(value1, 1, "Value1 should equal to 1")
             XCTAssertEqual(value2, 2, "Value2 should equal to 2")
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
@@ -139,7 +139,7 @@ class FutureZipOperatorTests: XCTestCase {
         // Immediate resolving on the left side of `+++`
         (Future(1) +++ Future<Int> { resolve in
             resolve(2)
-        }).onComplete { (value1, value2) in
+        }).subscribe { (value1, value2) in
             XCTAssertEqual(value1, 1, "Value1 should equal to 1")
             XCTAssertEqual(value2, 2, "Value2 should equal to 2")
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")
@@ -157,7 +157,7 @@ class FutureZipOperatorTests: XCTestCase {
             (delayContext(.milliseconds(200))) {
                 resolve(2)
             }
-        }).onComplete { (value1, value2) in
+        }).subscribe { (value1, value2) in
             XCTAssertEqual(value1, 1, "Value1 should equal to 1")
             XCTAssertEqual(value2, 2, "Value2 should equal to 2")
             XCTAssertFalse(Thread.isMainThread, "completion default run on background queue")

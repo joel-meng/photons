@@ -19,7 +19,7 @@ class FutureInitResolverTests: XCTestCase {
             resolver(10)
         }
         
-        future.onComplete { value in
+        future.subscribe { value in
             // Default completion queue is on `mutex` queue
             XCTAssertFalse(Thread.current.isMainThread)
             XCTAssertEqual(value, 10, "Value should equal to resolved value")
@@ -44,7 +44,7 @@ class FutureInitResolverTests: XCTestCase {
             }
         }
         
-        future.onComplete { value in
+        future.subscribe { value in
             XCTAssertEqual(value, 10, "Value should equal to resolved value")
             // Default completion queue is on `mutex` queue
             XCTAssertFalse(Thread.current.isMainThread)
@@ -69,7 +69,7 @@ class FutureInitResolverTests: XCTestCase {
             resolver(20)
         }
         
-        future.onComplete { value in
+        future.subscribe { value in
             XCTAssertEqual(value, 20, "Value should equal to resolved value")
             // Default completion queue is on `mutex` queue
             XCTAssertFalse(Thread.current.isMainThread)
@@ -97,7 +97,7 @@ class FutureInitResolverTests: XCTestCase {
             }
         }
         
-        future.onComplete { value in
+        future.subscribe { value in
             // Default completion queue is on `mutex` queue
             XCTAssertFalse(Thread.current.isMainThread)
             print("exp fulfill with \(value)")
@@ -121,7 +121,7 @@ class FutureInitResolverTests: XCTestCase {
         }
         
         future = nil
-        future?.onComplete { value in
+        future?.subscribe { value in
             // Will not trigger this as future is deinited when `future = nil`
             exp.fulfill()
         }
@@ -146,7 +146,7 @@ class FutureInitResolverTests: XCTestCase {
             }
         }
         future = nil
-        future?.onComplete { value in
+        future?.subscribe { value in
             // Will not trigger this as future is deinited when `future = nil`
             exp.fulfill()
         }
@@ -164,7 +164,7 @@ class FutureInitResolverTests: XCTestCase {
         
         let future = Future<Int> { resolver in }
         
-        future.onComplete { value in
+        future.subscribe { value in
             // Will not trigger this as future is deinited when `future = nil`
             exp.fulfill()
         }

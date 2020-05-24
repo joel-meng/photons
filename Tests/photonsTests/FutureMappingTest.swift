@@ -17,7 +17,7 @@ class FutureMappingTest: XCTestCase {
                 return String(value, radix: 16, uppercase: true)
             }
             
-            mappedFuture.onComplete { (result) in
+            mappedFuture.subscribe { (result) in
                 XCTAssertEqual(result, "F")
                 expectation.fulfill()
             }
@@ -31,7 +31,7 @@ class FutureMappingTest: XCTestCase {
                 String.init($0, radix: 16, uppercase: true)
             }
             
-            mappedFuture.onComplete { (result) in
+            mappedFuture.subscribe { (result) in
                 XCTAssertEqual(result, "F")
                 expectation.fulfill()
             }
@@ -50,7 +50,7 @@ class FutureMappingTest: XCTestCase {
                 String.init($0, radix: 16, uppercase: true)
             }
             
-            mappedFuture.onComplete { (result) in
+            mappedFuture.subscribe { (result) in
                 expectation.fulfill()
             }
         })
@@ -66,7 +66,7 @@ class FutureMappingTest: XCTestCase {
                 }
                 return innterFuture
             }
-            mappedFuture.onComplete { (new) in
+            mappedFuture.subscribe { (new) in
                 XCTAssertEqual(new, "F")
                 expectation.fulfill()
             }

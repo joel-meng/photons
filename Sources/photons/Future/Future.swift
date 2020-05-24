@@ -28,7 +28,7 @@ public protocol FutureObserver {
 
     associatedtype Value
 
-    func onComplete(subscribeOn: @escaping ExectutionContext,
+    func subscribe(on: @escaping ExectutionContext,
                     completeCallback: @escaping (Value) -> Void)
 }
 
@@ -65,13 +65,13 @@ public class Future<Value>: FutureType {
     public static func pure(subscribeOn subscribeContext: @escaping ExectutionContext = backgroundContext,
                             onComplete: @escaping (Value) -> Void) -> Future<Value> {
         let future = Future()
-        future.onComplete(subscribeOn: subscribeContext, completeCallback: onComplete)
+        future.subscribe(on: subscribeContext, completeCallback: onComplete)
         return future
     }
     
     // MARK: - Listening
     
-    public func onComplete(subscribeOn subscribeContext: @escaping ExectutionContext = backgroundContext,
+    public func subscribe(on subscribeContext: @escaping ExectutionContext = backgroundContext,
                            completeCallback: @escaping (Value) -> Void) {
         mutexQueue.async(flags: .barrier) {
             let wrapper: (Value) -> Void = { result in

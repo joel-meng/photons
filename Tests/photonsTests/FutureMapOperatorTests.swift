@@ -15,7 +15,7 @@ class FutureMapOperatorTests: XCTestCase {
     func testMapOperator_OriginalFutureResolvedImmediately() {
         let exp = expectation(description: "subscription called with right hex value")
         let doubleTheNumber = { $0 * 2 }
-        (Future(1) >>> doubleTheNumber).onComplete { value in
+        (Future(1) >>> doubleTheNumber).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -25,7 +25,7 @@ class FutureMapOperatorTests: XCTestCase {
     func testMapOperatorToDifferentType_OriginalFutureResolvedImmediately() {
         let exp = expectation(description: "subscription called with right hex value")
         let toHexString: (Int) -> String = { String($0, radix: 16, uppercase: true) }
-        (Future(15) >>> toHexString).onComplete { value in
+        (Future(15) >>> toHexString).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }
@@ -38,7 +38,7 @@ class FutureMapOperatorTests: XCTestCase {
         let future = Future<Int>(15)
         let toHexString: (Int) -> String = { String($0, radix: 16, uppercase: true) }
         
-        (future >>> toHexString).onComplete { value in
+        (future >>> toHexString).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }
@@ -52,7 +52,7 @@ class FutureMapOperatorTests: XCTestCase {
         let exp = expectation(description: "subscription called with right hex value")
         let future = Future<Int>()
         let doubleTheNumber = { $0 * 2 }
-        (future >>> doubleTheNumber).onComplete { value in
+        (future >>> doubleTheNumber).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -64,7 +64,7 @@ class FutureMapOperatorTests: XCTestCase {
         let exp = expectation(description: "subscription called with right hex value")
         let future = Future<Int>()
         let toHexString: (Int) -> String = { String($0, radix: 16, uppercase: true) }
-        (future >>> toHexString).onComplete { value in
+        (future >>> toHexString).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }
@@ -76,7 +76,7 @@ class FutureMapOperatorTests: XCTestCase {
         let exp = expectation(description: "subscription called with right hex value")
         let future = Future<Int>()
         let toHexString: (Int) -> String = { String($0, radix: 16, uppercase: true) }
-        (future >>> toHexString).onComplete { value in
+        (future >>> toHexString).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }

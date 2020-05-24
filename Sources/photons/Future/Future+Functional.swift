@@ -13,7 +13,7 @@ extension Future {
     
     func map<U>(f: @escaping (Value) -> U) -> Future<U> {
         let newFuture = Future<U>()
-        onComplete(subscribeOn: currentContext) { value in
+        subscribe(on: currentContext) { value in
             newFuture.resolve(with: f(value))
         }
         return newFuture
@@ -27,8 +27,8 @@ extension Future {
     
     public func flatMap<U>(f: @escaping (Value) -> Future<U>) -> Future<U> {
         let newFuture = Future<U>()
-        onComplete(subscribeOn: currentContext) { value in
-            f(value).onComplete(subscribeOn: currentContext) { valueU in
+        subscribe(on: currentContext) { value in
+            f(value).subscribe(on: currentContext) { valueU in
                 newFuture.resolve(with: valueU)
             }
         }

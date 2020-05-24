@@ -18,7 +18,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
         
         (future1 ||| { (value: Int) -> Future<Int> in
             return Future<Int>(value * 2)
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -34,7 +34,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
                 future.resolve(with: value * 2)
             }
             return future
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -47,7 +47,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
                 resolve(String(inValue, radix: 16, uppercase: true))
             }
         }
-        (Future(15) ||| toHexStringFuture).onComplete { value in
+        (Future(15) ||| toHexStringFuture).subscribe { value in
             XCTAssertEqual(value, "F")
         }
     }
@@ -60,7 +60,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
         
         (future ||| { (value: Int) -> Future<Int> in
             return Future<Int>(value * 2)
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -75,7 +75,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
         
         (future ||| { (value: Int) -> Future<Int> in
             return Future<Int>(value * 2)
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -96,7 +96,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
             }
         }
         
-        (future ||| toHexStringFuture).onComplete { value in
+        (future ||| toHexStringFuture).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }
@@ -115,7 +115,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
             return Future<Int> { resolve in
                 resolve(value * 2)
             }
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -132,7 +132,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
             return Future<Int> { resolve in
                 resolve(value * 2)
             }
-        }).onComplete { value in
+        }).subscribe { value in
             XCTAssertEqual(value, 2)
             exp.fulfill()
         }
@@ -153,7 +153,7 @@ class FutureFlatMapOperatorTests: XCTestCase {
             }
         }
         
-        (future ||| toHexStringFuture).onComplete { value in
+        (future ||| toHexStringFuture).subscribe { value in
             XCTAssertEqual(value, "F")
             exp.fulfill()
         }
