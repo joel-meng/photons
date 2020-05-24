@@ -79,7 +79,7 @@ public class Future<Value>: FutureType {
     // MARK: - Listening
     
     public func subscribe(on subscribeContext: @escaping ExectutionContext = backgroundContext,
-                           completeCallback: @escaping (Value) -> Void) {
+                          completeCallback: @escaping (Value) -> Void) {
         mutexQueue.async(flags: .barrier) {
             let wrapper: (Value) -> Void = { result in
                 subscribeContext {
