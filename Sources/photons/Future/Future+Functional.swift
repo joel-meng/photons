@@ -11,7 +11,7 @@ extension Future {
     
     // MARK: - Map
     
-    func map<U>(f: @escaping (Value) -> U) -> Future<U> {
+    public func map<U>(f: @escaping (Value) -> U) -> Future<U> {
         let newFuture = Future<U>()
         subscribe(on: currentContext) { value in
             newFuture.resolve(with: f(value))

@@ -30,6 +30,13 @@ public protocol FutureObserver {
 
     func subscribe(on: @escaping ExectutionContext,
                     completeCallback: @escaping (Value) -> Void)
+    
+    func map<U>(f: @escaping (Value) -> U) -> Future<U>
+    
+    func flatMap<U>(f: @escaping (Value) -> Future<U>) -> Future<U>
+    
+    func zip<A>(subscribeOn subscribeContext: @escaping ExectutionContext,
+                with anotherFuture: Future<A>) -> Future<(Value, A)>
 }
 
 public class Future<Value>: FutureType {
@@ -103,24 +110,4 @@ public class Future<Value>: FutureType {
             }
         }
     }
-}
-
-precedencegroup infix0 {
-    associativity: left
-    higherThan: AssignmentPrecedence
-}
-
-infix operator >>>: infix0
-func >>> <A, B>(future: Future<A>, f: @escaping (A) -> B) -> Future<B> {
-    future.map(f: f)
-}
-
-infix operator |||: infix0
-func ||| <A, B>(future: Future<A>, f: @escaping (A) -> Future<B>) -> Future<B> {
-    future.flatMap(f: f)
-}
-
-infix operator +++: infix0
-func +++ <A, B>(lhf: Future<A>, rhf: Future<B>) -> Future<(A, B)> {
-    lhf.zip(with: rhf)
 }
